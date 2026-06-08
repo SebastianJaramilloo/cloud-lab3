@@ -1,12 +1,236 @@
+
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
-  <title>Laboratorio III - Cloud Computing</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gestión de Tareas</title>
+
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: linear-gradient(135deg, #eef2ff, #f8fafc);
+      color: #1f2937;
+    }
+
+    .contenedor {
+      max-width: 900px;
+      margin: 50px auto;
+      padding: 20px;
+    }
+
+    .tarjeta {
+      background: white;
+      border-radius: 16px;
+      padding: 30px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+    }
+
+    h1 {
+      text-align: center;
+      color: #2563eb;
+      margin-bottom: 10px;
+    }
+
+    .subtitulo {
+      text-align: center;
+      color: #6b7280;
+      margin-bottom: 30px;
+    }
+
+    .formulario {
+      display: grid;
+      grid-template-columns: 1fr 2fr 2fr;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    input {
+      padding: 12px;
+      border: 1px solid #cbd5e1;
+      border-radius: 10px;
+      font-size: 15px;
+      outline: none;
+    }
+
+    input:focus {
+      border-color: #2563eb;
+      box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
+    }
+
+    .botones {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      margin-bottom: 25px;
+      flex-wrap: wrap;
+    }
+
+    button {
+      padding: 12px 18px;
+      border: none;
+      border-radius: 10px;
+      font-size: 15px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: 0.2s;
+    }
+
+    .btn-crear {
+      background-color: #2563eb;
+      color: white;
+    }
+
+    .btn-cargar {
+      background-color: #16a34a;
+      color: white;
+    }
+
+    .btn-limpiar {
+      background-color: #64748b;
+      color: white;
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+      opacity: 0.9;
+    }
+
+    .resultado {
+      background: #f1f5f9;
+      border-radius: 12px;
+      padding: 20px;
+      min-height: 120px;
+      border: 1px solid #e2e8f0;
+    }
+
+    .resultado h2 {
+      margin-top: 0;
+      color: #334155;
+    }
+
+    pre {
+      background: #0f172a;
+      color: #e5e7eb;
+      padding: 15px;
+      border-radius: 10px;
+      overflow-x: auto;
+    }
+
+    .nota {
+      font-size: 13px;
+      color: #64748b;
+      text-align: center;
+      margin-top: 20px;
+    }
+
+    @media (max-width: 700px) {
+      .formulario {
+        grid-template-columns: 1fr;
+      }
+
+      .contenedor {
+        margin: 20px auto;
+      }
+    }
+  </style>
 </head>
+
 <body>
-  <h1>Hola desde la nube ☁️</h1>
-  <p>Este es mi primer despliegue usando GitHub y Vercel.</p>
-  <p>Laboratorio III: Computación Serverless y Despliegue en la Nube.</p>
+  <div class="contenedor">
+    <div class="tarjeta">
+      <h1>Gestión de Tareas</h1>
+      <p class="subtitulo">
+        Cliente frontend que consume una API REST mediante solicitudes HTTP.
+      </p>
+
+      <div class="formulario">
+        <input id="id" type="number" placeholder="ID de la tarea">
+        <input id="titulo" type="text" placeholder="Título">
+        <input id="descripcion" type="text" placeholder="Descripción">
+      </div>
+
+      <div class="botones">
+        <button class="btn-crear" onclick="crearTarea()">Crear Tarea</button>
+        <button class="btn-cargar" onclick="cargarTareas()">Cargar Tareas</button>
+        <button class="btn-limpiar" onclick="limpiarResultado()">Limpiar</button>
+      </div>
+
+      <div class="resultado">
+        <h2>Resultado</h2>
+        <div id="resultado">
+          Aquí aparecerán las respuestas de la API.
+        </div>
+      </div>
+
+      <p class="nota">
+        Laboratorio IV - Aplicación distribuida con frontend, backend y API REST.
+      </p>
+    </div>
+  </div>
+
+  <script>
+    const API_URL = "http://127.0.0.1:8000/tareas";
+
+    async function crearTarea() {
+      const id = parseInt(document.getElementById("id").value);
+      const titulo = document.getElementById("titulo").value;
+      const descripcion = document.getElementById("descripcion").value;
+
+      if (!id || !titulo || !descripcion) {
+        document.getElementById("resultado").innerHTML =
+          "<p>Completa todos los campos antes de crear una tarea.</p>";
+        return;
+      }
+
+      const tarea = {
+        id: id,
+        titulo: titulo,
+        descripcion: descripcion,
+        completada: false
+      };
+
+      try {
+        const res = await fetch(API_URL, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(tarea)
+        });
+
+        const data = await res.json();
+
+        document.getElementById("resultado").innerHTML =
+          "<pre>" + JSON.stringify(data, null, 2) + "</pre>";
+      } catch (error) {
+        document.getElementById("resultado").innerHTML =
+          "<p>No se pudo conectar con la API. Verifica que el backend esté activo.</p>";
+      }
+    }
+
+    async function cargarTareas() {
+      try {
+        const res = await fetch(API_URL);
+        const data = await res.json();
+
+        document.getElementById("resultado").innerHTML =
+          "<pre>" + JSON.stringify(data, null, 2) + "</pre>";
+      } catch (error) {
+        document.getElementById("resultado").innerHTML =
+          "<p>No se pudo cargar la información desde la API.</p>";
+      }
+    }
+
+    function limpiarResultado() {
+      document.getElementById("resultado").innerHTML =
+        "Aquí aparecerán las respuestas de la API.";
+
+      document.getElementById("id").value = "";
+      document.getElementById("titulo").value = "";
+      document.getElementById("descripcion").value = "";
+    }
+  </script>
 </body>
 </html>
-Eliminar index.html anterior
