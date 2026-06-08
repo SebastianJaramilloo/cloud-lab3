@@ -1,1 +1,78 @@
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel
+from typing import List, Optional
+from fastapi.middleware.cors import CORSMiddleware
 
+app = FastAPI(title="API Serverless de Tareas - Laboratorio IV")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+class Tarea(BaseModel):
+    id: Optional[int] = None
+    titulo: str
+    descripcion: str
+    completada: bool = False
+
+tareas: List[Tarea] = []
+
+@app.get("/")
+def inicio():
+    return {
+        "mensaje": "API Serverless de tareas funcionando correctamente",
+        "endpoint": "/api/tareas"
+    }
+
+@app.get("/tareas")
+def listar_tareas():
+    return tareas
+
+@app.post("/tareas")
+def crear_tarea(tarea: Tarea):
+    tarea.id = len(tareas) + 1
+    tareas.append(tarea)
+
+    return {
+        "mensaje": "Tarea creada exitosamente",
+        "tarea": tarea
+    }
+
+@app.get("/tareas/{tarea_id}")
+def obtener_tarea(tarea_id: int):
+    for tarea in tareas:
+        if tarea.id == tarea_id:
+            return tarea
+
+    raise HTTPException(status_code=404, detail="Tarea no encontrada")
+
+@app.put("/tareas/{tarea_id}")
+def actualizar_tarea(tarea_id: int, tarea_actualizada: Tarea):
+    for i, tarea in enumerate(tareas):
+        if tarea.id == tarea_id:
+            tarea_actualizada.id = tarea_id
+            tareas[i] = tarea_actualizada
+
+            return {
+                "mensaje": "Tarea actualizada exitosamente",
+                "tarea": tarea_actualizada
+            }
+
+    raise HTTPException(status_code=404, detail="Tarea no encontrada")
+
+@app.delete("/tareas/{tarea_id}")
+def eliminar_tarea(tarea_id: int):
+    for i, tarea in enumerate(tareas):
+        if tarea.id == tarea_id:
+            tarea_eliminada = tareas.pop(i)
+
+            return {
+                "mensaje": "Tarea eliminada exitosamente",
+                "tarea": tarea_eliminada
+            }
+
+    raise HTTPException(status_code=404, detail="Tarea no encontrada")
